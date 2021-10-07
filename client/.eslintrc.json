@@ -32,7 +32,7 @@
       }
     ],
     "no-unused-vars": "warn",
-    "react-hooks/exhaustive-deps": "error",
+    "react-hooks/exhaustive-deps": "off",
     "comma-dangle": ["off"],
     "valid-jsdoc": ["off"],
     "no-tabs": ["off", { "allowIndentationTabs": true }],
