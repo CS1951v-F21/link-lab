@@ -1,12 +1,14 @@
-import React from 'react'
-import { IAnchor } from '../../../types'
+import { Divider } from '@chakra-ui/react'
+import React, { useEffect, useRef, useState } from 'react'
+import * as fa from 'react-icons/fa'
+import { IAnchor, IImageExtent, ITextExtent } from '../../../types'
 import { INodeContentProps } from '../NodeContent'
 import { generateRandomTextAnchors } from './textAnchors'
 import './TextContent.scss'
 
 /** Full page view focused on a node's content, with annotations and links */
 export const TextContent = (props: INodeContentProps) => {
-  const { node, content, preview, setSelectedExtent } = props
+  const { node, content, preview, setSelectedExtent= null } = props
   // This handles the case where we render text as a preview
   if (preview) {
     return <div className="textContent-preview">{content}</div>
@@ -15,6 +17,16 @@ export const TextContent = (props: INodeContentProps) => {
   /**
    * TODO [Lab]: Add a use ref so that we can keep track of the text content
    */
+    // Use state to keep track of anchors rendered on image
+   const [textAnchors, setTextAnchors] = useState<JSX.Element[]>([])
+   const textRef = useRef<HTMLHeadingElement>(null)
+   const selection = useRef<HTMLHeadingElement>(null)
+
+   useEffect(() => {  
+    displayTextAnchors()
+    console.log("In UseEffect")
+    setSelectedExtent && setSelectedExtent(null)
+  }, [setSelectedExtent])
 
   /**
    * TODO [Lab]: Add an onPointerUp method to update the selected extent
@@ -30,7 +42,36 @@ export const TextContent = (props: INodeContentProps) => {
    * @param e: React.PointerEvent
    * @returns void
    */
-  const onPointerUp = (e: React.PointerEvent) => {}
+
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+      const sel = getSelection()
+      console.log(sel)
+      if (sel) {
+
+       const extent: ITextExtent = {
+        type: 'text',     
+        text: sel.toString(),
+        startCharacter: sel.anchorOffset,
+        endCharacter: sel.focusOffset,
+      }
+      console.log(
+        extent)
+      // Check if setSelectedExtent exists, if it does then update it
+      if (setSelectedExtent) {
+
+        setSelectedExtent(extent)
+        // setSelectedExtent(extent)
+    }
+
+      // console.log(selection)
+      // console.log(extent)
+      }
+  
+    }
+ 
 
   /**
    * TODO [Lab]: Write a method where we display the existing anchors.
@@ -56,8 +97,41 @@ export const TextContent = (props: INodeContentProps) => {
   const displayTextAnchors = (): void => {
     const anchors: IAnchor[] = generateRandomTextAnchors(node.nodeId, content)
     // TODO
-  }
+    const anchorElementList: JSX.Element[] = []
+    if (content) {
+      const textAnchors: IAnchor[] = generateRandomTextAnchors(
+        node.nodeId,
+        content
+      )
+      // Step 2: Loop through our anchors and add the div to the list we created in Step 1
+      textAnchors.forEach((anchor) =>  {
+        if (anchor.extent?.type == 'text' && textRef.current) {
 
+        textRef.current.style.backgroundColor = "f3f3f3"
+         anchorElementList.push(
+            <div
+              id={anchor.anchorId}
+              key={'text' + anchor.anchorId}
+              className="anchor"
+              background-color="##ff4500"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onPointerUp={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                displayTextAnchors()
+              }}
+            />
+          )
+        }
+       }  
+      )
+      console.log(anchorElementList)
+      setTextAnchors(anchorElementList)
+    }
+  }
   /**
    * TODO [Lab]: Set the selected extent to null when this component loads
    *
@@ -79,5 +153,37 @@ export const TextContent = (props: INodeContentProps) => {
    * 1. Add a ref object
    * 2. Add an onPointerUp method so that when we release our mouse we update the selected extent
    */
-  return <div className="textContent-wrapper">{content}</div>
+
+  return (
+
+    // <div 
+    //   ref={textRef}
+    //   onPointerUp={onPointerUp}
+    //   className="textContent-wrapper">
+    //       {textAnchors} 
+    //       {
+    //       <div className="selection" ref={selection}>
+    //         <div
+    //           onPointerDown={(e) => {
+    //             e.preventDefault()
+    //             e.stopPropagation()
+    //           }}
+    //           onPointerUp={(e) => {
+    //             e.preventDefault()
+    //             e.stopPropagation()
+    //             displayTextAnchors()
+               
+    //           }}
+    //           className="anchor"
+    //       >
+
+    //       </div>
+    //     </div>
+    //   }
+    //   <div>{content}</div>
+    // </div>
+      <div onPointerUp={onPointerUp} ref={textRef} className="textContent-wrapper">
+        {content}
+      </div>
+    )
 }

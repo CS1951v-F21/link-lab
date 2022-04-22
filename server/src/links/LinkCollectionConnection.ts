@@ -1,5 +1,10 @@
 import { MongoClient } from 'mongodb'
-import { failureServiceResponse, ILink, IServiceResponse, successfulServiceResponse } from '../types'
+import {
+  failureServiceResponse,
+  ILink,
+  IServiceResponse,
+  successfulServiceResponse,
+} from '../types'
 
 /**
  * LinkCollectionConnection acts as an in-between communicator between
@@ -29,7 +34,14 @@ export class LinkCollectionConnection {
    *         failureServiceResponse on failure
    */
   async deleteLinks(linkIds: string[]): Promise<IServiceResponse<{}>> {
-    return failureServiceResponse('Hidden for assignment')
+    const collection = await this.client.db().collection(this.collectionName)
+    const myQuery = { linkId: { $in: linkIds } }
+    const deleteResponse = await collection.deleteMany(myQuery)
+    // we use result.ok to error check deleteMany
+    if (deleteResponse.result.ok) {
+      return successfulServiceResponse({})
+    }
+    return failureServiceResponse('Failed to delete links')
   }
 
   /**

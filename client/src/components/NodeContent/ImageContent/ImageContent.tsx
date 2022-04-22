@@ -39,8 +39,10 @@ export const ImageContent = (props: INodeContentProps) => {
    */
   useEffect(() => {
     displayImageAnchors()
+    console.log("Im use")
     setSelectedExtent && setSelectedExtent(null)
   }, [setSelectedExtent])
+
 
   /**
    * onPointerDown initializes the selection
@@ -142,6 +144,8 @@ export const ImageContent = (props: INodeContentProps) => {
       }
       // Check if setSelectedExtent exists, if it does then update it
       if (setSelectedExtent) {
+        const s = setSelectedExtent(extent)
+        console.log("s = " + s)
         setSelectedExtent(extent)
       }
     }
@@ -178,18 +182,45 @@ export const ImageContent = (props: INodeContentProps) => {
   const displayImageAnchors = (): void => {
     const imageWidth = imageContainer.current?.getBoundingClientRect().width
     const imageHeight = imageContainer.current?.getBoundingClientRect().height
+
     // Step 1: We want to fill this list with divs to render on top of our image!
     const anchorElementList: JSX.Element[] = []
     if (imageWidth && imageHeight) {
-      const anchors: IAnchor[] = generateRandomImageAnchors(
+      const imageAnchors: IAnchor[] = generateRandomImageAnchors(
         node.nodeId,
         imageWidth,
         imageHeight
       )
       // Step 2: Loop through our anchors and add the div to the list we created in Step 1
-    }
+      imageAnchors.forEach((anchor) =>  {
+        if (anchor.extent?.type == 'image') {
+        anchorElementList.push(
+            <div
+              id={anchor.anchorId}
+              key={'image.' + anchor.anchorId}
+              className="image-anchor"
+
+              onPointerDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              style={{
+                height: anchor.extent.height,
+                left: anchor.extent.left,
+                top: anchor.extent.top,
+                width: anchor.extent.width,
+              }}
+            />
+          )
+            }
+       }  
+      )
+      console.log(anchorElementList)
+ 
     // Step 3: Call setImageAnchors and pass the filled anchorElementList that you just created
-  }
+    setImageAnchors(anchorElementList)
+   }
+}  
 
   return (
     <div
